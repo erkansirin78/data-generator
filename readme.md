@@ -1,9 +1,8 @@
 ﻿# Genel
-Streaming uygulamaları geliştiricileri için hazırlanmıştır. Heryerde bir çok veri setini kolaylıkla bularak batch
-geliştirmeler yapmak mümkün ancak aynısını streaming için söylemek mümkün değil. Yukarıdaki 2 farklı python scripti
-bu ihtiyacı karşılamak üzere hazırlanmıştır. Bir veri dosyasını okuyarak onu başka bir klasöre veya Kafka'ya stream olarak üretir. 
-Güzel yönü stream üretim hızının ve log dosya büyüklüğünün ayarlanabiliyor olmasıdır. 
-Python3 kullanmalısınız.
+Streaming uygulamaları geliştiricileri için hazırlanmıştır. Heryerde bir çok veri setini kolaylıkla bularak batch geliştirmeler yapmak mümkün ancak aynısını streaming için söylemek mümkün değil. Yukarıdaki 2 farklı python scripti bu ihtiyacı karşılamak üzere hazırlanmıştır. Bir veri dosyasını okuyarak onu başka bir klasöre veya Kafka'ya stream olarak üretir. Güzel yönü stream üretim hızının ve log dosya büyüklüğünün ayarlanabiliyor olmasıdır. **Python3** kullanmalısınız. Virtual environment kullanmanız tavsiye olunur.
+
+## kurulum
+`pip install -r requirements.txt`
 
 # DataframeToLog (dataframe_to_log.py)
 Bir veri dosyasını(csv,txt,parquet) okuyarak onu belirlenen hızda hedef dizine belirlenen büyüklüklerde log olarak yazar.  
