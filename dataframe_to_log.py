@@ -34,9 +34,10 @@ class DataFrameDataGenerator:
         print("self.shuffle", self.shuffle)
         self.output_header = output_header
         print("self.output_header", self.output_header)
-        self.output_index = True if output_index is True else False
+        self.output_index = output_index
         print("self.output_index", self.output_index)
         print("Starting in {} seconds... ".format(self.batch_interval * self.batch_size))
+
 
     def read_source_file(self, extension='csv'):
         if extension == 'csv':
@@ -84,7 +85,7 @@ class DataFrameDataGenerator:
                     # Empty timestamp list because it must be fill for the next batch
                     time_list_for_each_batch = []
 
-                    df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr), header=False,
+                    df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr), header=self.output_header,
                                     index=self.output_index, index_label='ID', encoding='utf-8')
                     sayac = i
                     remaining_per = 100 - (100 * (total_counter / (self.repeat * df_size)))
@@ -99,29 +100,40 @@ class DataFrameDataGenerator:
 
 
 if __name__ == "__main__":
+
+    def str2bool(v):
+        if isinstance(v, bool):
+            return v
+        if v.lower() in ('yes', 'true', 't', 'y', '1'):
+            return True
+        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+            return False
+        else:
+            raise argparse.ArgumentTypeError('Boolean value expected.')
+
     ap = argparse.ArgumentParser()
     ap.add_argument("-s", "--sep", required=False, type=str, default=',',
-                    help="seperatör giriniz. Varsayılan , Örn: , | ; vb.")
+                    help="seperatör giriniz. Varsayılan ,")
     ap.add_argument("-i", "--input", required=False, type=str, default='input/iris.csv',
-                    help="Veri setine ait path giriniz. default: input/iris.csv Örn: /home/murat/iris.csv")
+                    help="Veri setine ait path giriniz. default: input/iris.csv")
     ap.add_argument("-o", "--output", required=False, type=str, default='output',
                     help="Hedef klasör.  Örnek: /home/murat/log_data")
     ap.add_argument("-b", "--batch_interval", required=False, type=float, default=0.5,
-                    help="Her satırda kaç saniye beklesin float. Örn: 0.5 (Yarım saniye)")
+                    help="Her satırda kaç saniye beklesin float.Varsayılan 0.5 saniye")
     ap.add_argument("-z", "--batch_size", required=False, type=int, default=10,
-                    help="Kaç satırda bir dosya oluşturup hedefe yazsın int. Örn: 100")
+                    help="Kaç satırda bir dosya oluşturup hedefe yazsın int. Varsayılan 10 satır")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default='csv',
-                    help="Kaynak veri setinin uzantısı nedir?. Örn: csv")
+                    help="Kaynak dosyanın uzantısı nedir?.Varsayılan csv")
     ap.add_argument("-x", "--prefix", required=False, type=str, default='my_df_',
-                    help="Hedefe yazılacak dosya isminin ön eki. Varsayılan my_df_ , Örn: iris_")
-    ap.add_argument("-oh", "--output_header", required=False, type=bool, default=True,
+                    help="Hedefe yazılacak dosya isminin ön eki. Varsayılan my_df_")
+    ap.add_argument("-oh", "--output_header", required=False, type=str2bool, default=False,
                     help="Yazarken sütun isimleri/başlık olsun mu?. Varsayılan True")
-    ap.add_argument("-idx", "--output_index", required=False, type=bool, default=False,
-                    help="Yazarken dataframe index bilgisi olsun mu?. Varsayılan False, eğer True ise index key sütunu ile yazılır.")
+    ap.add_argument("-idx", "--output_index", required=False, type=str2bool, default=False,
+                    help="Yazarken satır indeksi eklensin mi?. Varsayılan False, yani eklenmesin")
     ap.add_argument("-r", "--repeat", required=False, type=int, default=1,
-                    help="Dataframe'in kaç tur generate edileceği. Varsayılan 1")
-    ap.add_argument("-shf", "--shuffle", required=False, type=bool, default=False,
-                    help="Dataframe'in satırları shuflle edilsin mi?. Varsayılan False")
+                    help="Dataframe'in kaç tur/tekrar generate edileceği. Varsayılan 1")
+    ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
+                    help="Dataframe'in satırları shuflle edilsin mi?. Varsayılan False, edilmesin")
 
     args = vars(ap.parse_args())
 

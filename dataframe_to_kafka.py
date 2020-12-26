@@ -81,22 +81,33 @@ class DataFrameToKafka:
 
 
 if __name__ == "__main__":
+    def str2bool(v):
+        if isinstance(v, bool):
+            return v
+        if v.lower() in ('yes', 'true', 't', 'y', '1'):
+            return True
+        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+            return False
+        else:
+            raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", required=False, type=str, default="input/iris.csv",
                     help="Veri setine ait path giriniz. Varsayılan input/iris.csv")
     ap.add_argument("-s", "--sep", required=False, type=str, default=",",
-                    help="seperatör giriniz. Varsayılan , Örn: , | ; vb.")
+                    help="seperatör giriniz. Varsayılan ,")
     ap.add_argument("-rst", "--row_sleep_time", required=False, type=float, default=0.5,
                     help="Her bir satır için bekleme süresi. Varsayılan 0.5")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default="csv",
                     help="Kaynak veri setinin uzantısı nedir?. Varsayılan csv")
     ap.add_argument("-t", "--topic", required=False, type=str, default="test1",
                     help="Kafka topic. Varsayılan test1")
-    ap.add_argument("-b", "--bootstrap_servers", required=False, type=str, default=["localhost:9092"],
+    ap.add_argument("-b", "--bootstrap_servers", required=False, type=list, default=["localhost:9092"],
                     help="kafka bootstraop servers ve portu  python listesi içinde. Varsayılan [localhost:9092]")
     ap.add_argument("-r", "--repeat", required=False, type=int, default=1,
                     help="Dataframe'in kaç tur generate edileceği. Varsayılan 1")
-    ap.add_argument("-shf", "--shuffle", required=False, type=str, default=False,
+    ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
                     help="Dataframe'in satırları shuflle edilsin mi?. Varsayılan False")
 
     args = vars(ap.parse_args())
