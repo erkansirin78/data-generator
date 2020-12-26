@@ -47,10 +47,6 @@ class DataFrameDataGenerator:
 
     # write df to disk
     def df_to_file_as_log(self):
-
-        # reset counter
-        sayac = 0
-
         # get dataframe size
         df_size = len(self.df)
 
@@ -61,7 +57,9 @@ class DataFrameDataGenerator:
         repeat_counter = 1
         total_counter = 1
         # loop for each row
-        for i in range(0, self.repeat):
+        for j in range(0, self.repeat):
+            i = 0
+            sayac = 0
             for i in range(1, df_size + 1):
 
                 # sleep for each row specified in batch_interval argument
