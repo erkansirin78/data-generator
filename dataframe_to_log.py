@@ -113,11 +113,11 @@ if __name__ == "__main__":
     ap.add_argument("-s", "--sep", required=False, type=str, default=',',
                     help="seperatör giriniz. Varsayılan ,")
     ap.add_argument("-i", "--input", required=False, type=str, default='input/iris.csv',
-                    help="Veri setine ait path giriniz. default: input/iris.csv")
+                    help="Veri setine ait path giriniz. Varsayılan input/iris.csv")
     ap.add_argument("-o", "--output", required=False, type=str, default='output',
-                    help="Hedef klasör.  Örnek: /home/murat/log_data")
+                    help="Hedef klasör.  Varsayılan output")
     ap.add_argument("-b", "--batch_interval", required=False, type=float, default=0.5,
-                    help="Her satırda kaç saniye beklesin float.Varsayılan 0.5 saniye")
+                    help="Her satırda kaç saniye beklesin float. Varsayılan 0.5 saniye")
     ap.add_argument("-z", "--batch_size", required=False, type=int, default=10,
                     help="Kaç satırda bir dosya oluşturup hedefe yazsın int. Varsayılan 10 satır")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default='csv',
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     ap.add_argument("-x", "--prefix", required=False, type=str, default='my_df_',
                     help="Hedefe yazılacak dosya isminin ön eki. Varsayılan my_df_")
     ap.add_argument("-oh", "--output_header", required=False, type=str2bool, default=False,
-                    help="Yazarken sütun isimleri/başlık olsun mu?. Varsayılan True")
+                    help="Yazarken sütun isimleri/başlık olsun mu?. Varsayılan False")
     ap.add_argument("-idx", "--output_index", required=False, type=str2bool, default=False,
                     help="Yazarken satır indeksi eklensin mi?. Varsayılan False, yani eklenmesin")
     ap.add_argument("-r", "--repeat", required=False, type=int, default=1,
