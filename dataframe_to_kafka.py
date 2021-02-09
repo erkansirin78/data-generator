@@ -13,7 +13,7 @@ python dataframe_to_kafka.py -i "D:/Datasets/iris.csv" -s "," -rst 0.5 -e "csv" 
 class DataFrameToKafka:
 
     def __init__(self, input,  sep, row_sleep_time, source_file_extension, bootstrap_servers,
-                 topic, repeat, shuffle):
+                 topic, repeat, shuffle, key_index):
         self.input = input
         self.sep = sep
         self.row_sleep_time = row_sleep_time
@@ -21,6 +21,8 @@ class DataFrameToKafka:
         self.shuffle = shuffle
         self.df = self.read_source_file(source_file_extension)
         self.topic = topic
+        self.key_index = key_index
+        print(self.key_index)
         try:
             self.producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
         except:
@@ -64,7 +66,10 @@ class DataFrameToKafka:
         total_time = self.row_sleep_time * df_size
         for i in range(0, self.repeat):
             for index, row in self.df.iterrows():
-                self.producer.send(self.topic, key=str(index).encode(), value=row[-1].encode())
+                if self.key_index == 1000:
+                    self.producer.send(self.topic, key=str(index).encode(), value=row[-1].encode())
+                else:
+                    self.producer.send(self.topic, key=str(row[self.key_index]).encode(), value=row[-1].encode())
                 self.producer.flush()
                 time.sleep(self.row_sleep_time)
                 sayac = sayac + 1
@@ -94,21 +99,24 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", required=False, type=str, default="input/iris.csv",
-                    help="Veri setine ait path giriniz. Varsayılan input/iris.csv")
+                    help="Data path. Default: ./input/iris.csv")
     ap.add_argument("-s", "--sep", required=False, type=str, default=",",
-                    help="seperatör giriniz. Varsayılan ,")
+                    help="Delimiter. Default: ,")
     ap.add_argument("-rst", "--row_sleep_time", required=False, type=float, default=0.5,
-                    help="Her bir satır için bekleme süresi. Varsayılan 0.5")
+                    help="Sleep time in seconds per row. Default: 0.5")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default="csv",
-                    help="Kaynak veri setinin uzantısı nedir?. Varsayılan csv")
+                    help="Extension of data file. Default: csv")
     ap.add_argument("-t", "--topic", required=False, type=str, default="test1",
-                    help="Kafka topic. Varsayılan test1")
+                    help="Kafka topic. Default: test1")
     ap.add_argument("-b", "--bootstrap_servers", required=False, type=list, default=["localhost:9092"],
-                    help="kafka bootstraop servers ve portu  python listesi içinde. Varsayılan [localhost:9092]")
+                    help="Kafka bootstrap servers and port in a python list. Default: [localhost:9092]")
     ap.add_argument("-r", "--repeat", required=False, type=int, default=1,
-                    help="Dataframe'in kaç tur generate edileceği. Varsayılan 1")
+                    help="How many times to repeat dataset. Default: 1")
     ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
-                    help="Dataframe'in satırları shuflle edilsin mi?. Varsayılan False")
+                    help="Shuffle the rows?. Default: False")
+    ap.add_argument("-k", "--key_index", required=False, type=int, default=1000,
+                    help="Which column will be send as key to kafka? If not used this option, pandas dataframe index will "
+                         "be send. Default: 1000 indicates pandas index will be used.")
 
     args = vars(ap.parse_args())
 
@@ -120,6 +128,7 @@ if __name__ == "__main__":
         topic=args['topic'],
         bootstrap_servers=args['bootstrap_servers'],
         repeat=args['repeat'],
-        shuffle=args['shuffle']
+        shuffle=args['shuffle'],
+        key_index=args['key_index']
     )
     df_to_kafka.df_to_kafka()
