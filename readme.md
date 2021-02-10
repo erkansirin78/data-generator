@@ -113,9 +113,11 @@ python dataframe_to_log.py \
 --output_index True
 ```
 
-# Kafka
+# Kafka DatafameToKafka (dataframe_to_kafka.py)
 ## TR
-### kurulum
+### Kurulum
+Packages: pandas pyarrow kafka-python
+
 `python3 -m virtualenv kafka `
 
 `source kafka/bin/activate `
@@ -125,7 +127,7 @@ python dataframe_to_log.py \
 `python dataframe_to_kafka.py `
 
 
-### DatafameToKafka (dataframe_to_kafka.py)
+### Açıklama
 Bir veri dosyasını okuyarak onu belirlenen hızda Kafka'ya mesaj olarak gönderir.
 Boş değerlerin olduğu satırları düşürür.
 Dataframe repeat değeri kadar generate edilebilir. Örneğin repeat değeri 3 ise ve dataframe 
@@ -158,6 +160,8 @@ python dataframe_to_kafka.py \
 ## ENG
 
 ### Install the packages with virtualev
+Packages: pandas pyarrow kafka-python  
+
 `python3 -m virtualenv kafka `
 
 `source kafka/bin/activate `
@@ -167,7 +171,7 @@ python dataframe_to_kafka.py \
 `python dataframe_to_kafka.py `
 
 
-### DatafameToKafka (dataframe_to_kafka.py)
+### Intro
 It reads a data file and sends it as a message to Kafka at the specified speed.
 Drops rows with empty values.
 Dataframe can be generated as much as the repeat value. For example, if the repeat is 3 and there are 150 lines in the dataframe, a total of 450 lines will be generated.
