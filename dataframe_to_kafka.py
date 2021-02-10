@@ -22,13 +22,12 @@ class DataFrameToKafka:
         self.df = self.read_source_file(source_file_extension)
         self.topic = topic
         self.key_index = key_index
-        print(self.key_index)
         try:
             self.producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
         except:
             print("No Broker available")
 
-    # puts all columns into one as string
+    # puts all columns into one as string. Index -1 will be all columns
     def turn_df_to_str(self, df):
         x = df.to_string(header=False,
                          index=False,
@@ -48,16 +47,18 @@ class DataFrameToKafka:
             # put all cols into value column
             df['value'] = self.turn_df_to_str(df)
             return df
+        # if not csv, parquet
         else:
             if self.shuffle is "True":
                 df = pd.read_parquet(self.input, 'auto').sample(frac=1)
             else:
                 df = pd.read_parquet(self.input, 'auto')
             df = df.dropna()
+            # put all cols into value column
             df['value'] = self.turn_df_to_str(df)
             return df
 
-    # bir dataframe'i kafka
+    # Produce a pandas dataframe to kafka
     def df_to_kafka(self):
 
         sayac = 0
@@ -66,10 +67,14 @@ class DataFrameToKafka:
         total_time = self.row_sleep_time * df_size
         for i in range(0, self.repeat):
             for index, row in self.df.iterrows():
+
                 if self.key_index == 1000:
                     self.producer.send(self.topic, key=str(index).encode(), value=row[-1].encode())
+                    # row[-1] corresponds to all columns which already put in one colum named value
+                    # If  -k or --key_index not used pandas df index will be sent to kafka as key
                 else:
                     self.producer.send(self.topic, key=str(row[self.key_index]).encode(), value=row[-1].encode())
+                    # if -k or --key_index used the column spesified in this option will be sent to kafka as key
                 self.producer.flush()
                 time.sleep(self.row_sleep_time)
                 sayac = sayac + 1
@@ -86,6 +91,7 @@ class DataFrameToKafka:
 
 
 if __name__ == "__main__":
+    # Boolean oprions parser
     def str2bool(v):
         if isinstance(v, bool):
             return v
