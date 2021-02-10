@@ -116,7 +116,10 @@ python dataframe_to_log.py \
 # Kafka DatafameToKafka (dataframe_to_kafka.py)
 ## TR
 ### Kurulum
-Packages: pandas pyarrow kafka-python
+
+`git clone https://github.com/erkansirin78/data-generator.git`
+
+` cd data-generator `
 
 `python3 -m virtualenv kafka `
 
@@ -160,7 +163,9 @@ python dataframe_to_kafka.py \
 ## ENG
 
 ### Install the packages with virtualev
-Packages: pandas pyarrow kafka-python  
+`git clone https://github.com/erkansirin78/data-generator.git`
+
+` cd data-generator `  
 
 `python3 -m virtualenv kafka `
 
