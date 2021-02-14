@@ -159,7 +159,6 @@ python dataframe_to_kafka.py \
 --shuffle True
 --key_index 2
 ```
-
 ## ENG
 
 ### Install the packages with virtualev

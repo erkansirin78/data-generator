@@ -15,13 +15,21 @@ class DataFrameToKafka:
     def __init__(self, input,  sep, row_sleep_time, source_file_extension, bootstrap_servers,
                  topic, repeat, shuffle, key_index):
         self.input = input
+        print("input: {}".format(self.input))
         self.sep = sep
+        print("sep: {}".format(self.sep))
         self.row_sleep_time = row_sleep_time
+        print("row_sleep_time: {}".format(self.row_sleep_time))
         self.repeat = repeat
+        print("repeat: {}".format(self.repeat))
         self.shuffle = shuffle
+        print("shuffle: {}".format(self.shuffle))
         self.df = self.read_source_file(source_file_extension)
         self.topic = topic
+        print("topic: {}".format(self.topic))
         self.key_index = key_index
+        print("key_index: {}".format(self.key_index))
+        print("bootstrap_servers: {}".format(bootstrap_servers))
         try:
             self.producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
         except:
@@ -114,7 +122,7 @@ if __name__ == "__main__":
                     help="Extension of data file. Default: csv")
     ap.add_argument("-t", "--topic", required=False, type=str, default="test1",
                     help="Kafka topic. Default: test1")
-    ap.add_argument("-b", "--bootstrap_servers", required=False, type=list, default=["localhost:9092"],
+    ap.add_argument("-b", "--bootstrap_servers", required=False, nargs='+', default=["localhost:9092"],
                     help="Kafka bootstrap servers and port in a python list. Default: [localhost:9092]")
     ap.add_argument("-r", "--repeat", required=False, type=int, default=1,
                     help="How many times to repeat dataset. Default: 1")
