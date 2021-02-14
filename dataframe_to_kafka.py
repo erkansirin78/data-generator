@@ -7,7 +7,7 @@ from datetime import datetime
 import argparse
 """
 Example:
-python dataframe_to_kafka.py -i "D:/Datasets/iris.csv" -s "," -rst 0.5 -e "csv" -t iris -b ["cloudera:9092"] -r 3 -shf "True"
+python dataframe_to_kafka.py -i "D:/Datasets/iris.csv" -s "," -rst 0.5 -e "csv" -t iris -b "kafka_broker1:9092" "kafka_broker2:9092" -r 3 -shf "True"
 """
 
 class DataFrameToKafka:

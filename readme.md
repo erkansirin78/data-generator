@@ -150,11 +150,11 @@ Yani indeks 1000 rezerve edilmiştir ve her halükarda Kafka'ya key gönderilir.
 ```
 python dataframe_to_kafka.py \
 --input "D:\Datasets\LifeExpectancyData.csv" \
---sep="," \
+--sep "," \
 --row_sleep_time 2 \
---source_file_extension="csv" \
---topic="deneme" \
---bootstrap_servers=["locahost:9092"]  \
+--source_file_extension "csv" \
+--topic "deneme" \
+--bootstrap_servers "kafka_broker1:9092" "kafka_broker2:9092"  \
 --repeat 3 \
 --shuffle True
 --key_index 2
@@ -194,11 +194,11 @@ So index 1000 is reserved and in any case the key is sent to Kafka.
 ```
 python dataframe_to_kafka.py \
 --input "D:\Datasets\LifeExpectancyData.csv" \
---sep="," \
+--sep "," \
 --row_sleep_time 2 \
---source_file_extension="csv" \
---topic="deneme" \
---bootstrap_servers=["locahost:9092"]  \
+--source_file_extension "csv" \
+--topic "deneme" \
+--bootstrap_servers "kafka_broker1:9092" "kafka_broker2:9092"  \
 --repeat 3 \
 --shuffle True
 --key_index 2
