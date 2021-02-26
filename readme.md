@@ -25,6 +25,7 @@ erkan@ubuntu:~/data-generator$ source datagen/bin/activate
 Python 3.6.9
 
 (datagen) erkan@ubuntu:~/data-generator$ pip install -r requirements.txt 
+
 (datagen) erkan@ubuntu:~/data-generator$ python dataframe_to_log.py 
 
 # Expected output
