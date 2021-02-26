@@ -12,7 +12,42 @@ The above 2 different python scripts have been prepared to meet this need.
 Reading a data file and sending it to another folder `dataframe_to_log.py`) or Kafka (` dataframe_to_kafka.py`)
 It produces as a stream. The nice thing is that stream generation speed and log file size can be adjusted.
   You must use ** Python3 **. It is recommended to use virtual environment. 
+# Kurulum/Installation
+```
+erkan@ubuntu:~$ git clone https://github.com/erkansirin78/data-generator.git
 
+erkan@ubuntu:~$ cd data-generator/
+
+erkan@ubuntu:~/data-generator$ python3 -m virtualenv datagen
+
+erkan@ubuntu:~/data-generator$ source datagen/bin/activate
+(datagen) erkan@ubuntu:~/data-generator$ python -V
+Python 3.6.9
+
+(datagen) erkan@ubuntu:~/data-generator$ pip install -r requirements.txt 
+(datagen) erkan@ubuntu:~/data-generator$ python dataframe_to_log.py 
+
+# Expected output
+self.sep ,
+self.input input/iris.csv
+self.df 150
+self.output_folder output
+self.batch_size 10
+self.prefix my_df_
+self.batch_interval 0.5
+self.repeat 1
+self.shuffle False
+self.output_header False
+self.output_index False
+Starting in 5.0 seconds... 
+10/150 processed, % 93.33 will be completed in 1.17 mins.
+repeat_counter 1
+total_counter 10
+20/150 processed, % 86.67 will be completed in 1.08 mins.
+repeat_counter 1
+
+
+```
 # DataframeToLog (dataframe_to_log.py)
 ## TR
 - Bir veri dosyasını(csv,txt,parquet) okuyarak onu belirlenen hızda hedef dizine belirlenen büyüklüklerde log olarak yazar.  
