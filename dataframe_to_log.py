@@ -18,6 +18,8 @@ class DataFrameDataGenerator:
         print("self.sep", self.sep)
         self.input = input
         print("self.input", self.input)
+        self.shuffle = shuffle
+        print("self.shuffle", self.shuffle)
         self.df = self.read_source_file(source_file_extension)
         print("self.df", len(self.df))
         self.output_folder = output_folder
@@ -30,20 +32,26 @@ class DataFrameDataGenerator:
         print("self.batch_interval", self.batch_interval)
         self.repeat = repeat
         print("self.repeat", self.repeat)
-        self.shuffle = shuffle
-        print("self.shuffle", self.shuffle)
         self.output_header = output_header
         print("self.output_header", self.output_header)
         self.output_index = output_index
         print("self.output_index", self.output_index)
         print("Starting in {} seconds... ".format(self.batch_interval * self.batch_size))
 
-
     def read_source_file(self, extension='csv'):
         if extension == 'csv':
-            return pd.read_csv(self.input, sep=self.sep)
+            if self.shuffle is True:
+                df = pd.read_csv(self.input, sep=self.sep).sample(frac=1)
+            else:
+                df = pd.read_csv(self.input, sep=self.sep)
+            return df
+        # if not csv, parquet
         else:
-            return pd.read_parquet(self.input, 'auto')
+            if self.shuffle is True:
+                df = pd.read_parquet(self.input, 'auto').sample(frac=1)
+            else:
+                df = pd.read_parquet(self.input, 'auto')
+            return df
 
     # write df to disk
     def df_to_file_as_log(self):
