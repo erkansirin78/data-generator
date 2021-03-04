@@ -1,6 +1,6 @@
 ﻿# Genel
-Streaming uygulamaları geliştiricileri için hazırlanmıştır. Heryerde bir çok veri setini kolaylıkla bularak batch 
-geliştirmeler yapmak mümkün ancak aynısını streaming için söylemek mümkün değil. 
+Streaming uygulamaları geliştiricileri için hazırlanmıştır. Her yerde bir çok veri setini kolaylıkla bularak batch 
+geliştirmeler yapmak mümkün ancak aynısını streaming için söylemek zor. 
 Yukarıdaki 2 farklı python scripti bu ihtiyacı karşılamak üzere hazırlanmıştır. 
 Bir veri dosyasını okuyarak onu başka bir klasöre (`dataframe_to_log.py`) veya Kafka'ya (`dataframe_to_kafka.py`) 
 stream olarak üretir. Güzel yönü stream üretim hızının ve log dosya büyüklüğünün ayarlanabiliyor olmasıdır. **Python3** 
