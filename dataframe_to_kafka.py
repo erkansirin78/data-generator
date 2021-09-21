@@ -46,7 +46,7 @@ class DataFrameToKafka:
 
     def read_source_file(self, extension='csv'):
         if extension == 'csv':
-            if self.shuffle == "True":
+            if self.shuffle is True:
                 df = pd.read_csv(self.input, sep=self.sep).sample(frac=1)
             else:
                 df = pd.read_csv(self.input, sep=self.sep)
@@ -57,7 +57,7 @@ class DataFrameToKafka:
             return df
         # if not csv, parquet
         else:
-            if self.shuffle is "True":
+            if self.shuffle is True:
                 df = pd.read_parquet(self.input, 'auto').sample(frac=1)
             else:
                 df = pd.read_parquet(self.input, 'auto')
