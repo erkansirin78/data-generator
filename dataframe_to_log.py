@@ -13,9 +13,11 @@ python dataframe_to_log.py --sep "," --input "input/iris.csv" --output "output" 
 
 class DataFrameDataGenerator:
     def __init__(self, input, output_folder, batch_interval, repeat, shuffle, batch_size, prefix,
-                 sep, source_file_extension, output_header, output_index):
+                 sep, log_sep, source_file_extension, output_header, output_index):
         self.sep = sep
         print("self.sep", self.sep)
+        self.log_sep = log_sep
+        print("self.log_sep", self.log_sep)
         self.input = input
         print("self.input", self.input)
         self.shuffle = shuffle
@@ -92,7 +94,7 @@ class DataFrameDataGenerator:
                     time_list_for_each_batch = []
 
                     df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr), header=self.output_header,
-                                    index=self.output_index, index_label='ID', encoding='utf-8')
+                                    index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep)
                     sayac = i
                     remaining_per = 100 - (100 * (total_counter / (self.repeat * df_size)))
                     remaining_time_secs = (total_time - (self.batch_interval * i * repeat_counter))
@@ -119,27 +121,29 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-s", "--sep", required=False, type=str, default=',',
-                    help="seperatör giriniz. Varsayılan ,")
+                    help="Delimiter. Default: ,")
+    ap.add_argument("-ls", "--log_sep", required=False, type=str, default=',',
+                    help="In log file how the fields should separated. Default ,")
     ap.add_argument("-i", "--input", required=False, type=str, default='input/iris.csv',
-                    help="Veri setine ait path giriniz. Varsayılan input/iris.csv")
+                    help="Input data path. Default: ./input/iris.csv")
     ap.add_argument("-o", "--output", required=False, type=str, default='output',
-                    help="Hedef klasör.  Varsayılan output")
+                    help="Output folder. It must be exists.  Default ./output")
     ap.add_argument("-b", "--batch_interval", required=False, type=float, default=0.5,
-                    help="Her satırda kaç saniye beklesin float. Varsayılan 0.5 saniye")
+                    help="Time to sleep for every row. Default 0.5 seconds")
     ap.add_argument("-z", "--batch_size", required=False, type=int, default=10,
-                    help="Kaç satırda bir dosya oluşturup hedefe yazsın int. Varsayılan 10 satır")
+                    help="How many rows should be in a single log file. Default 10 rows")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default='csv',
-                    help="Kaynak dosyanın uzantısı nedir?.Varsayılan csv")
+                    help="File extension of source file. If specified other than csv it is considered parquet. Default csv")
     ap.add_argument("-x", "--prefix", required=False, type=str, default='my_df_',
-                    help="Hedefe yazılacak dosya isminin ön eki. Varsayılan my_df_")
+                    help="The prefix of log filename. Default my_df_")
     ap.add_argument("-oh", "--output_header", required=False, type=str2bool, default=False,
-                    help="Yazarken sütun isimleri/başlık olsun mu?. Varsayılan False")
+                    help="Should log files have header?. Default False")
     ap.add_argument("-idx", "--output_index", required=False, type=str2bool, default=False,
-                    help="Yazarken satır indeksi eklensin mi?. Varsayılan False, yani eklenmesin")
+                    help="Should log file have index field. Default False, no index")
     ap.add_argument("-r", "--repeat", required=False, type=int, default=1,
-                    help="Dataframe'in kaç tur/tekrar generate edileceği. Varsayılan 1")
+                    help="Round number that how many times dataset generated. Default 1")
     ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
-                    help="Dataframe'in satırları shuflle edilsin mi?. Varsayılan False, edilmesin")
+                    help="Should dataset shuffled before to generate log?. Default False, no shuffle")
 
     args = vars(ap.parse_args())
 
@@ -150,6 +154,7 @@ if __name__ == "__main__":
         batch_size=args['batch_size'],
         prefix=args['prefix'],
         sep=args['sep'],
+        log_sep=args['log_sep'],
         source_file_extension=args['source_file_extension'],
         output_header=args['output_header'],
         output_index=args['output_index'],

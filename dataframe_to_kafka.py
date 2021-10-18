@@ -12,12 +12,14 @@ python dataframe_to_kafka.py -i "D:/Datasets/iris.csv" -s "," -rst 0.5 -e "csv" 
 
 class DataFrameToKafka:
 
-    def __init__(self, input,  sep, row_sleep_time, source_file_extension, bootstrap_servers,
+    def __init__(self, input,  sep, kafka_sep, row_sleep_time, source_file_extension, bootstrap_servers,
                  topic, repeat, shuffle, key_index):
         self.input = input
         print("input: {}".format(self.input))
         self.sep = sep
         print("sep: {}".format(self.sep))
+        self.kafka_sep = kafka_sep
+        print("kafka_sep: {}".format(self.kafka_sep))
         self.row_sleep_time = row_sleep_time
         print("row_sleep_time: {}".format(self.row_sleep_time))
         self.repeat = repeat
@@ -41,7 +43,7 @@ class DataFrameToKafka:
                          index=False,
                          index_names=False).split('\n')
 
-        vals = [','.join(ele.split()) for ele in x]
+        vals = [self.kafka_sep.join(ele.split()) for ele in x]
         return vals
 
     def read_source_file(self, extension='csv'):
@@ -116,6 +118,8 @@ if __name__ == "__main__":
                     help="Data path. Default: ./input/iris.csv")
     ap.add_argument("-s", "--sep", required=False, type=str, default=",",
                     help="Delimiter. Default: ,")
+    ap.add_argument("-ks", "--kafka_sep", required=False, type=str, default=",",
+                    help="Kafka value separator. Default: ,")
     ap.add_argument("-rst", "--row_sleep_time", required=False, type=float, default=0.5,
                     help="Sleep time in seconds per row. Default: 0.5")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default="csv",
@@ -137,6 +141,7 @@ if __name__ == "__main__":
     df_to_kafka = DataFrameToKafka(
         input=args['input'],
         sep=args['sep'],
+        kafka_sep=args['kafka_sep'],
         row_sleep_time=args['row_sleep_time'],
         source_file_extension=args['source_file_extension'],
         topic=args['topic'],
