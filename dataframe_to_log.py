@@ -7,13 +7,17 @@ import argparse
 from random import randrange
 
 """
-python dataframe_to_log.py --sep "," --input "input/iris.csv" --output "output" --batch_interval 0.1 --batch_size 10 --source_file_extension "csv" --prefix "iris_" --output_header False --output_index True
+python dataframe_to_log.py --sep "," \
+--input "input/iris.csv" --output "output" \
+--batch_interval 0.1 --batch_size 10 --source_file_extension "csv" \
+--prefix "iris_" --output_header False --output_index True \
+--log_sep '|' --excluded_cols 'Species' 'PetalWidthCm'
 """
 
 
 class DataFrameDataGenerator:
     def __init__(self, input, output_folder, batch_interval, repeat, shuffle, batch_size, prefix,
-                 sep, log_sep, source_file_extension, output_header, output_index):
+                 sep, log_sep, source_file_extension, output_header, output_index, excluded_cols):
         self.sep = sep
         print("self.sep", self.sep)
         self.log_sep = log_sep
@@ -38,7 +42,12 @@ class DataFrameDataGenerator:
         print("self.output_header", self.output_header)
         self.output_index = output_index
         print("self.output_index", self.output_index)
+        self.excluded_cols = excluded_cols
+        print("self.excluded_cols", self.excluded_cols)
+        columns_to_write = list(set(self.df.columns).difference(self.excluded_cols))
+        print("columns_to_write", columns_to_write)
         print("Starting in {} seconds... ".format(self.batch_interval * self.batch_size))
+
 
     def read_source_file(self, extension='csv'):
         if extension == 'csv':
@@ -59,6 +68,7 @@ class DataFrameDataGenerator:
     def df_to_file_as_log(self):
         # get dataframe size
         df_size = len(self.df)
+
 
         # calculate total streaming time
         total_time = self.batch_interval * df_size * self.repeat
@@ -94,7 +104,8 @@ class DataFrameDataGenerator:
                     time_list_for_each_batch = []
 
                     df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr), header=self.output_header,
-                                    index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep)
+                                    index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep,
+                                    columns=self.columns_to_write)
                     sayac = i
                     remaining_per = 100 - (100 * (total_counter / (self.repeat * df_size)))
                     remaining_time_secs = (total_time - (self.batch_interval * i * repeat_counter))
@@ -144,6 +155,9 @@ if __name__ == "__main__":
                     help="Round number that how many times dataset generated. Default 1")
     ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
                     help="Should dataset shuffled before to generate log?. Default False, no shuffle")
+    ap.add_argument("-exc", "--excluded_cols", required=False, nargs='+', default=['it_is_impossible_column'],
+                    help="The columns not to write log file?. Default ['it_is_impossible_column'].")
+
 
     args = vars(ap.parse_args())
 
@@ -159,6 +173,7 @@ if __name__ == "__main__":
         output_header=args['output_header'],
         output_index=args['output_index'],
         repeat=args['repeat'],
-        shuffle=args['shuffle']
+        shuffle=args['shuffle'],
+        excluded_cols=args['excluded_cols']
     )
     df_log_generator.df_to_file_as_log()

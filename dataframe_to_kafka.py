@@ -13,7 +13,7 @@ python dataframe_to_kafka.py -i "D:/Datasets/iris.csv" -s "," -rst 0.5 -e "csv" 
 class DataFrameToKafka:
 
     def __init__(self, input,  sep, kafka_sep, row_sleep_time, source_file_extension, bootstrap_servers,
-                 topic, repeat, shuffle, key_index):
+                 topic, repeat, shuffle, key_index, excluded_cols):
         self.input = input
         print("input: {}".format(self.input))
         self.sep = sep
@@ -26,6 +26,8 @@ class DataFrameToKafka:
         print("repeat: {}".format(self.repeat))
         self.shuffle = shuffle
         print("shuffle: {}".format(self.shuffle))
+        self.excluded_cols = excluded_cols
+        print("self.excluded_cols: {}".format(self.excluded_cols))
         self.df = self.read_source_file(source_file_extension)
         self.topic = topic
         print("topic: {}".format(self.topic))
@@ -53,8 +55,11 @@ class DataFrameToKafka:
             else:
                 df = pd.read_csv(self.input, sep=self.sep)
             df = df.dropna()
-
             # put all cols into value column
+
+            columns_to_write = list(set(df.columns).difference(self.excluded_cols))
+            print("columns_to_write", columns_to_write)
+            df = df[columns_to_write]
             df['value'] = self.turn_df_to_str(df)
             return df
         # if not csv, parquet
@@ -65,6 +70,9 @@ class DataFrameToKafka:
                 df = pd.read_parquet(self.input, 'auto')
             df = df.dropna()
             # put all cols into value column
+            columns_to_write = list(set(df.columns).difference(self.excluded_cols))
+            print("columns_to_write", columns_to_write)
+            df = df[columns_to_write]
             df['value'] = self.turn_df_to_str(df)
             return df
 
@@ -135,6 +143,8 @@ if __name__ == "__main__":
     ap.add_argument("-k", "--key_index", required=False, type=int, default=1000,
                     help="Which column will be send as key to kafka? If not used this option, pandas dataframe index will "
                          "be send. Default: 1000 indicates pandas index will be used.")
+    ap.add_argument("-exc", "--excluded_cols", required=False, nargs='+', default=['it_is_impossible_column'],
+                    help="The columns not to write log file?. Default ['it_is_impossible_column'].")
 
     args = vars(ap.parse_args())
 
@@ -148,6 +158,7 @@ if __name__ == "__main__":
         bootstrap_servers=args['bootstrap_servers'],
         repeat=args['repeat'],
         shuffle=args['shuffle'],
-        key_index=args['key_index']
+        key_index=args['key_index'],
+        excluded_cols=args['excluded_cols']
     )
     df_to_kafka.df_to_kafka()
