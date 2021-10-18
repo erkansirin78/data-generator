@@ -144,7 +144,7 @@ if __name__ == "__main__":
                     help="Which column will be send as key to kafka? If not used this option, pandas dataframe index will "
                          "be send. Default: 1000 indicates pandas index will be used.")
     ap.add_argument("-exc", "--excluded_cols", required=False, nargs='+', default=['it_is_impossible_column'],
-                    help="The columns not to write log file?. Default ['it_is_impossible_column'].")
+                    help="The columns not to write log file?. Default ['it_is_impossible_column']. Ex: -exc 'Species' 'PetalWidthCm'")
 
     args = vars(ap.parse_args())
 

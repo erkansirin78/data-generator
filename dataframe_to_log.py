@@ -156,7 +156,7 @@ if __name__ == "__main__":
     ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
                     help="Should dataset shuffled before to generate log?. Default False, no shuffle")
     ap.add_argument("-exc", "--excluded_cols", required=False, nargs='+', default=['it_is_impossible_column'],
-                    help="The columns not to write log file?. Default ['it_is_impossible_column'].")
+                    help="The columns not to write log file?. Default ['it_is_impossible_column']. Ex: -exc 'Species' 'PetalWidthCm'")
 
 
     args = vars(ap.parse_args())
