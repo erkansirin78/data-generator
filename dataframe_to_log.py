@@ -24,6 +24,8 @@ class DataFrameDataGenerator:
         print("self.log_sep", self.log_sep)
         self.input = input
         print("self.input", self.input)
+        self.excluded_cols = excluded_cols
+        print("self.excluded_cols", self.excluded_cols)
         self.shuffle = shuffle
         print("self.shuffle", self.shuffle)
         self.df = self.read_source_file(source_file_extension)
@@ -42,10 +44,6 @@ class DataFrameDataGenerator:
         print("self.output_header", self.output_header)
         self.output_index = output_index
         print("self.output_index", self.output_index)
-        self.excluded_cols = excluded_cols
-        print("self.excluded_cols", self.excluded_cols)
-        columns_to_write = list(set(self.df.columns).difference(self.excluded_cols))
-        print("columns_to_write", columns_to_write)
         print("Starting in {} seconds... ".format(self.batch_interval * self.batch_size))
 
 
@@ -53,15 +51,27 @@ class DataFrameDataGenerator:
         if extension == 'csv':
             if self.shuffle is True:
                 df = pd.read_csv(self.input, sep=self.sep).sample(frac=1)
+                columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+                print("columns_to_write", columns_to_write)
+                df = df[columns_to_write]
             else:
                 df = pd.read_csv(self.input, sep=self.sep)
+                columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+                print("columns_to_write", columns_to_write)
+                df = df[columns_to_write]
             return df
         # if not csv, parquet
         else:
             if self.shuffle is True:
                 df = pd.read_parquet(self.input, 'auto').sample(frac=1)
+                columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+                print("columns_to_write", columns_to_write)
+                df = df[columns_to_write]
             else:
                 df = pd.read_parquet(self.input, 'auto')
+                columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+                print("columns_to_write", columns_to_write)
+                df = df[columns_to_write]
             return df
 
     # write df to disk
@@ -104,8 +114,7 @@ class DataFrameDataGenerator:
                     time_list_for_each_batch = []
 
                     df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr), header=self.output_header,
-                                    index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep,
-                                    columns=self.columns_to_write)
+                                    index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep)
                     sayac = i
                     remaining_per = 100 - (100 * (total_counter / (self.repeat * df_size)))
                     remaining_time_secs = (total_time - (self.batch_interval * i * repeat_counter))
