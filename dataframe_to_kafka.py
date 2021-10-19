@@ -57,7 +57,7 @@ class DataFrameToKafka:
             df = df.dropna()
             # put all cols into value column
 
-            columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+            columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
             print("columns_to_write", columns_to_write)
             df = df[columns_to_write]
             df['value'] = self.turn_df_to_str(df)
@@ -70,7 +70,7 @@ class DataFrameToKafka:
                 df = pd.read_parquet(self.input, 'auto')
             df = df.dropna()
             # put all cols into value column
-            columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+            columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
             print("columns_to_write", columns_to_write)
             df = df[columns_to_write]
             df['value'] = self.turn_df_to_str(df)

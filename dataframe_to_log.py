@@ -51,12 +51,12 @@ class DataFrameDataGenerator:
         if extension == 'csv':
             if self.shuffle is True:
                 df = pd.read_csv(self.input, sep=self.sep).sample(frac=1)
-                columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+                columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
                 print("columns_to_write", columns_to_write)
                 df = df[columns_to_write]
             else:
                 df = pd.read_csv(self.input, sep=self.sep)
-                columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+                columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
                 print("columns_to_write", columns_to_write)
                 df = df[columns_to_write]
             return df
@@ -64,12 +64,12 @@ class DataFrameDataGenerator:
         else:
             if self.shuffle is True:
                 df = pd.read_parquet(self.input, 'auto').sample(frac=1)
-                columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+                columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
                 print("columns_to_write", columns_to_write)
                 df = df[columns_to_write]
             else:
                 df = pd.read_parquet(self.input, 'auto')
-                columns_to_write = sorted(list(set(df.columns).difference(self.excluded_cols)))
+                columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
                 print("columns_to_write", columns_to_write)
                 df = df[columns_to_write]
             return df
