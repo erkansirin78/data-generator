@@ -39,13 +39,15 @@ class DataFrameToKafka:
         except:
             print("No Broker available")
 
-    # puts all columns into one as string. Index -1 will be all columns
     def turn_df_to_str(self, df):
-        x = df.to_string(header=False,
-                         index=False,
-                         index_names=False).split('\n')
-
-        vals = [self.kafka_sep.join(ele.split()) for ele in x]
+        """
+        # puts all columns into one as string. Index -1 will be all columns
+        :param df: df
+        :return: stringed values of df row
+        """
+        x = df.values.astype(str)
+        # Put separator between columns
+        vals = [self.kafka_sep.join(ele) for ele in x]
         return vals
 
     def read_source_file(self, extension='csv'):
@@ -60,6 +62,7 @@ class DataFrameToKafka:
             columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
             print("columns_to_write", columns_to_write)
             df = df[columns_to_write]
+            # what is sent to kafka as value
             df['value'] = self.turn_df_to_str(df)
             return df
         # if not csv, parquet
@@ -88,7 +91,7 @@ class DataFrameToKafka:
 
                 if self.key_index == 1000:
                     self.producer.send(self.topic, key=str(index).encode(), value=row[-1].encode())
-                    # row[-1] corresponds to all columns which already put in one colum named value
+                    # row[-1] corresponds to all columns which already put in one column named value
                     # If  -k or --key_index not used pandas df index will be sent to kafka as key
                 else:
                     self.producer.send(self.topic, key=str(row[self.key_index]).encode(), value=row[-1].encode())
