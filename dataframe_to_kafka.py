@@ -130,17 +130,17 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", required=False, type=str, default="input/iris.csv",
-                    help="Data path. Default: ./input/iris.csv")
+                    help="Source data path. Default: ./input/iris.csv")
     ap.add_argument("-s", "--sep", required=False, type=str, default=",",
-                    help="Delimiter. Default: ,")
-    ap.add_argument("-ks", "--kafka_sep", required=False, type=str, default=",",
-                    help="Kafka value separator. Default: ,")
-    ap.add_argument("-rst", "--row_sleep_time", required=False, type=float, default=0.5,
-                    help="Sleep time in seconds per row. Default: 0.5")
+                    help="Source data file delimiter. Default: ,")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default="csv",
                     help="Extension of data file. Default: csv")
+    ap.add_argument("-ks", "--kafka_sep", required=False, type=str, default=",",
+                    help="Kafka value separator. What should be the sep in Kafka. Default: ,")
+    ap.add_argument("-rst", "--row_sleep_time", required=False, type=float, default=0.5,
+                    help="Sleep time in seconds per row. Default: 0.5")
     ap.add_argument("-t", "--topic", required=False, type=str, default="test1",
-                    help="Kafka topic. Default: test1")
+                    help="Kafka topic. Which topic to produce. Default: test1")
     ap.add_argument("-b", "--bootstrap_servers", required=False, nargs='+', default=["localhost:9092"],
                     help="Kafka bootstrap servers and port in a python list. Default: [localhost:9092]")
     ap.add_argument("-r", "--repeat", required=False, type=int, default=1,
