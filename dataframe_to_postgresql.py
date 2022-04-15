@@ -4,15 +4,10 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 
-
-
-
 class DataFrameToPostgreSQL:
 
     def __init__(self, input, host, user, password, database, table, sep, row_sleep_time,
-                 source_file_extension,
-                 repeat, shuffle
-                 ):
+                 source_file_extension, row_size, batch_size, repeat, shuffle):
         self.input = input
         print("input: {}".format(self.input))
         self.host = host
@@ -34,17 +29,22 @@ class DataFrameToPostgreSQL:
         self.shuffle = shuffle
         print("shuffle: {}".format(self.shuffle))
         self.df = self.read_source_file(source_file_extension)
+        self.row_size = row_size
+        print("row_size {}".format(self.row_size))
+        self.batch_size = batch_size
+        print("batch_size {}".format(self.batch_size))
         self.conn = None
         try:
-            print('Connecting to the PostgreSQL...........')
+            print('Connecting to the PostgreSQL')
             conn_str = '{engine}://{user}:{password}@{host}:{port}/{database}'
             self.conn = create_engine(conn_str.format(**{"host": self.host, "port": 5432,
                                                          "database": self.database,
                                                          "user": self.user,
                                                          "password": self.password,
                                                          "engine": "postgresql+psycopg2"}))
-            print("Connection successfully..................")
+            print("Connection successfully")
         except Exception as error:
+            print("Connection not successfully")
             print(error)
             self.conn = None
 
@@ -69,21 +69,34 @@ class DataFrameToPostgreSQL:
 
     # Produce a pandas dataframe to postgresql
     def df_to_postgresql(self):
-        sayac = 0
-        df_size = len(self.df) * self.repeat
-        total_time = self.row_sleep_time * df_size
-        for i in range(0, self.repeat):
-            self.df.to_sql(name=self.table, con=self.conn, if_exists='append', index=False)
-            time.sleep(self.row_sleep_time)
-            sayac = sayac + 1
-            remaining_per = 100 - (100 * (sayac / df_size))
-            remaining_time_secs = (total_time - (self.row_sleep_time * sayac))
-            remaining_time_mins = remaining_time_secs / 60
-            print("%d/%d processed, completed." % (
-                df_size, df_size))
-
-            if sayac >= df_size:
-                break
+        counter = 0
+        if self.row_size == 0:
+            df_size = len(self.df)
+            total_time = self.row_sleep_time * df_size
+            for r in range(0, len(self.df), self.batch_size):
+                temp = self.df[r:r + self.batch_size]
+                temp.to_sql(name=self.table, con=self.conn, if_exists='append', index=False)
+                time.sleep(self.row_sleep_time)
+                counter = counter + 1
+                remaining_per = 100 - (100 * (counter / df_size))
+                remaining_time_secs = (total_time - (self.row_sleep_time * counter))
+                remaining_time_mins = remaining_time_secs / 60
+                print("%d/%d processed, %s %.2f will be completed in %.2f mins." % (
+                    counter, df_size, "%", remaining_per, remaining_time_mins))
+        else:
+            self.df = self.df.loc[0:self.row_size - 1]
+            df_size = len(self.df)
+            total_time = self.row_sleep_time * df_size
+            for r in range(0, len(self.df), self.batch_size):
+                temp = self.df[r:r + self.batch_size]
+                temp.to_sql(name=self.table, con=self.conn, if_exists='append', index=False)
+                time.sleep(self.row_sleep_time)
+                counter = counter + 1
+                remaining_per = 100 - (100 * (counter / df_size))
+                remaining_time_secs = (total_time - (self.row_sleep_time * counter))
+                remaining_time_mins = remaining_time_secs / 60
+                print("%d/%d processed, %s %.2f will be completed in %.2f mins." % (
+                    counter, df_size, "%", remaining_per, remaining_time_mins))
 
 
 if __name__ == "__main__":
@@ -124,7 +137,10 @@ if __name__ == "__main__":
                     help="How many times to repeat dataset. Default: 1")
     ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
                     help="Shuffle the rows?. Default: False")
-
+    ap.add_argument("-rs", "--row_size", required=False, type=int, default=0,
+                    help="row size. Default: ""all_table")
+    ap.add_argument("-b", "--batch_size", required=False, type=int, default=10,
+                    help="batch size. Default: ""all_table")
 
     args = vars(ap.parse_args())
 
@@ -139,6 +155,8 @@ if __name__ == "__main__":
         user=args['user'],
         database=args['database'],
         password=args['password'],
-        table=args['table']
+        table=args['table'],
+        row_size=args['row_size'],
+        batch_size=args['batch_size']
     )
     df_to_postgresql.df_to_postgresql()
