@@ -81,7 +81,7 @@ class DataFrameToPostgresql:
             for r in range(0, len(self.df), self.batch_size):
                 print(str(r) + "-" + str(r + self.batch_size))
                 self.df.loc[r:r + self.batch_size - 1].to_sql(name=self.table, uri=self.conn, if_exists='append',
-                                                              index=True)
+                                                              index=False)
                 time.sleep(self.row_sleep_time)
                 counter = counter + 1
                 remaining_per = 100 - (100 * (counter / df_size))
