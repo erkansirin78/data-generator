@@ -17,7 +17,7 @@ python dataframe_to_log.py --sep "," \
 
 class DataFrameDataGenerator:
     def __init__(self, input, output_folder, batch_interval, repeat, shuffle, batch_size, prefix,
-                 sep, log_sep, source_file_extension, output_header, output_index, excluded_cols):
+                 sep, log_sep, source_file_extension, output_header, is_output_format_parquet, output_index, excluded_cols):
         self.sep = sep
         print("self.sep", self.sep)
         self.log_sep = log_sep
@@ -42,6 +42,8 @@ class DataFrameDataGenerator:
         print("self.repeat", self.repeat)
         self.output_header = output_header
         print("self.output_header", self.output_header)
+        self.is_output_format_parquet = is_output_format_parquet
+        print("self.is_output_format_parquet", self.is_output_format_parquet)
         self.output_index = output_index
         print("self.output_index", self.output_index)
         print("Starting in {} seconds... ".format(self.batch_interval * self.batch_size))
@@ -113,8 +115,13 @@ class DataFrameDataGenerator:
                     # Empty timestamp list because it must be fill for the next batch
                     time_list_for_each_batch = []
 
-                    df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr), header=self.output_header,
-                                    index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep)
+                    if not self.is_output_format_parquet:
+                        df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr), header=self.output_header,
+                                        index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep)
+
+                    df_batch.to_parquet(self.output_folder + "/" + self.prefix + str(timestr)+".parquet", engine='pyarrow',
+                                    index=self.output_index)
+
                     sayac = i
                     remaining_per = 100 - (100 * (total_counter / (self.repeat * df_size)))
                     remaining_time_secs = (total_time - (self.batch_interval * i * repeat_counter))
@@ -154,10 +161,12 @@ if __name__ == "__main__":
                     help="How many rows should be in a single log file. Default 10 rows")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default='csv',
                     help="File extension of source file. If specified other than csv it is considered parquet. Default csv")
-    ap.add_argument("-x", "--prefix", required=False, type=str, default='my_df_',
-                    help="The prefix of log filename. Default my_df_")
+    ap.add_argument("-x", "--prefix", required=False, type=str, default='my_log_',
+                    help="The prefix of log filename. Default my_log_")
     ap.add_argument("-oh", "--output_header", required=False, type=str2bool, default=False,
                     help="Should log files have header?. Default False")
+    ap.add_argument("-ofp", "--is_output_format_parquet", required=False, type=str2bool, default=False,
+                    help="Is output format be parquet? If True will write parquet format. Default False")
     ap.add_argument("-idx", "--output_index", required=False, type=str2bool, default=False,
                     help="Should log file have index field. Default False, no index")
     ap.add_argument("-r", "--repeat", required=False, type=int, default=1,
@@ -180,6 +189,7 @@ if __name__ == "__main__":
         log_sep=args['log_sep'],
         source_file_extension=args['source_file_extension'],
         output_header=args['output_header'],
+        is_output_format_parquet=args['is_output_format_parquet'],
         output_index=args['output_index'],
         repeat=args['repeat'],
         shuffle=args['shuffle'],
