@@ -17,7 +17,8 @@ python dataframe_to_log.py --sep "," \
 
 class DataFrameDataGenerator:
     def __init__(self, input, output_folder, batch_interval, repeat, shuffle, batch_size, prefix,
-                 sep, log_sep, source_file_extension, output_header, is_output_format_parquet, output_index, excluded_cols):
+                 sep, log_sep, source_file_extension, output_header, is_output_format_parquet, output_index,
+                 excluded_cols):
         self.sep = sep
         print("self.sep", self.sep)
         self.log_sep = log_sep
@@ -47,7 +48,6 @@ class DataFrameDataGenerator:
         self.output_index = output_index
         print("self.output_index", self.output_index)
         print("Starting in {} seconds... ".format(self.batch_interval * self.batch_size))
-
 
     def read_source_file(self, extension='csv'):
         if extension == 'csv':
@@ -80,7 +80,6 @@ class DataFrameDataGenerator:
     def df_to_file_as_log(self):
         # get dataframe size
         df_size = len(self.df)
-
 
         # calculate total streaming time
         total_time = self.batch_interval * df_size * self.repeat
@@ -115,12 +114,13 @@ class DataFrameDataGenerator:
                     # Empty timestamp list because it must be fill for the next batch
                     time_list_for_each_batch = []
 
-                    if not self.is_output_format_parquet:
-                        df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr), header=self.output_header,
+                    if self.is_output_format_parquet:
+                        df_batch.to_parquet(self.output_folder + "/" + self.prefix + str(timestr) + ".parquet",
+                                            engine='pyarrow', index=self.output_index)
+                    else:
+                        df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr),
+                                        header=self.output_header,
                                         index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep)
-
-                    df_batch.to_parquet(self.output_folder + "/" + self.prefix + str(timestr)+".parquet", engine='pyarrow',
-                                    index=self.output_index)
 
                     sayac = i
                     remaining_per = 100 - (100 * (total_counter / (self.repeat * df_size)))
@@ -145,6 +145,7 @@ if __name__ == "__main__":
             return False
         else:
             raise argparse.ArgumentTypeError('Boolean value expected.')
+
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-s", "--sep", required=False, type=str, default=',',
@@ -175,7 +176,6 @@ if __name__ == "__main__":
                     help="Should dataset shuffled before to generate log?. Default False, no shuffle")
     ap.add_argument("-exc", "--excluded_cols", required=False, nargs='+', default=['it_is_impossible_column'],
                     help="The columns not to write log file?. Default ['it_is_impossible_column']. Ex: -exc 'Species' 'PetalWidthCm'")
-
 
     args = vars(ap.parse_args())
 
