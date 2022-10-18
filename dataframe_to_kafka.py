@@ -1,9 +1,7 @@
 # coding: utf-8
 import pandas as pd
 from kafka import KafkaProducer
-import time, sys, os
-from pathlib import Path
-from datetime import datetime
+import time
 import argparse
 """
 Example:

@@ -1,22 +1,22 @@
 # coding: utf-8
 import pandas as pd
-import time
+import time, io
 from datetime import datetime
 import argparse
+import logging
+import boto3
+from botocore.config import Config
 
 """
-python dataframe_to_log.py --sep "," \
---input "input/iris.csv" --output "output" \
---batch_interval 0.1 --batch_size 10 --source_file_extension "csv" \
---prefix "iris_" --output_header False --output_index True \
---log_sep '|' --excluded_cols 'Species' 'PetalWidthCm'
+ python dataframe_to_s3.py -i ~/datasets/Mall_Customers.csv \
+ -buc dataops -k "mydata/mc" -aki root -sac root12345 \
+ -eu http://localhost:9000 -ofp True
 """
 
 
 class DataFrameDataGenerator:
-    def __init__(self, input, output_folder, batch_interval, repeat, shuffle, batch_size, prefix,
-                 sep, log_sep, source_file_extension, output_header, is_output_format_parquet, output_index,
-                 excluded_cols):
+    def __init__(self, input, bucket, key, access_key_id, secret_access_key, endpoint_url, batch_interval, repeat, shuffle, batch_size,
+                 sep, log_sep, source_file_extension, output_header, is_output_format_parquet, output_index, excluded_cols):
         self.sep = sep
         print("self.sep", self.sep)
         self.log_sep = log_sep
@@ -29,12 +29,16 @@ class DataFrameDataGenerator:
         print("self.shuffle", self.shuffle)
         self.df = self.read_source_file(source_file_extension)
         print("self.df", len(self.df))
-        self.output_folder = output_folder
-        print("self.output_folder", self.output_folder)
+        self.bucket = bucket
+        print("self.bucket", self.bucket)
+        self.key = key
+        print("self.key", self.key)
+        self.access_key_id = access_key_id
+        self.secret_access_key = secret_access_key
+        self.endpoint_url = endpoint_url
+        print("self.endpoint_url", self.endpoint_url)
         self.batch_size = batch_size
         print("self.batch_size", self.batch_size)
-        self.prefix = prefix
-        print("self.prefix", self.prefix)
         self.batch_interval = batch_interval
         print("self.batch_interval", self.batch_interval)
         self.repeat = repeat
@@ -74,8 +78,33 @@ class DataFrameDataGenerator:
                 df = df[columns_to_write]
             return df
 
+    def get_s3_resource(self):
+        s3_res = boto3.resource('s3',
+                                endpoint_url=self.endpoint_url,
+                                aws_access_key_id=self.access_key_id,
+                                aws_secret_access_key=self.secret_access_key,
+                                config=Config(signature_version='s3v4'))
+        return s3_res
+
+    def save_df_to_s3(self, df, bucket, key, is_output_format_parquet=False, index=False):
+        ''' Store df as a buffer, then save buffer to s3'''
+        s3_res = self.get_s3_resource()
+        try:
+            if is_output_format_parquet:
+                buffer = io.BytesIO()
+                df.to_parquet(buffer, engine='pyarrow', index=self.output_index)
+                s3_res.Object(bucket, key).put(Body=buffer.getvalue())
+                logging.info(f'{key} saved to s3 bucket {bucket}')
+            else:
+                buffer = io.StringIO()
+                df.to_csv(buffer, index=False)
+                s3_res.Object(bucket, key).put(Body=buffer.getvalue())
+                logging.info(f'{key} saved to s3 bucket {bucket}')
+        except Exception as e:
+            raise logging.exception(e)
+
     # write df to disk
-    def df_to_file_as_log(self):
+    def df_to_s3_as_log(self):
         # get dataframe size
         df_size = len(self.df)
 
@@ -113,13 +142,18 @@ class DataFrameDataGenerator:
                     time_list_for_each_batch = []
 
                     if self.is_output_format_parquet:
-                        df_batch.to_parquet(self.output_folder + "/" + self.prefix + str(timestr) + ".parquet",
-                                            engine='pyarrow', index=self.output_index)
+                        # df_batch.to_parquet(self.key + "/" + str(timestr) + ".parquet",
+                        #                     engine='pyarrow', index=self.output_index)
+                        key = self.key + "_" + str(timestr) + ".parquet"
+                        self.save_df_to_s3(df=df_batch, bucket=self.bucket, key=key,
+                                           is_output_format_parquet=self.is_output_format_parquet, index=False)
                     else:
-                        df_batch.to_csv(self.output_folder + "/" + self.prefix + str(timestr),
-                                        header=self.output_header,
-                                        index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep)
-
+                        # df_batch.to_csv(self.key + "/" + str(timestr),
+                        #                 header=self.output_header,
+                        #                 index=self.output_index, index_label='ID', encoding='utf-8', sep=self.log_sep)
+                        key = self.key + "_" + str(timestr) + ".csv"
+                        self.save_df_to_s3(df=df_batch, bucket=self.bucket, key=key,
+                                           is_output_format_parquet=self.is_output_format_parquet, index=False)
                     sayac = i
                     remaining_per = 100 - (100 * (total_counter / (self.repeat * df_size)))
                     remaining_time_secs = (total_time - (self.batch_interval * i * repeat_counter))
@@ -146,22 +180,29 @@ if __name__ == "__main__":
 
 
     ap = argparse.ArgumentParser()
+    ap.add_argument("-buc", "--bucket", required=False, type=str, default='dataops',
+                    help="Bucket. It must be exists.  Default dataops")
+    ap.add_argument("-k", "--key", required=False, type=str, default='my_data/my_log_',
+                    help="""Key. The path and the file name of object in the bucket. 
+                    Timestamp and file extension will add as suffix.  Default my_data/my_log.csv""")
+    ap.add_argument("-aki", "--access_key_id", required=False, type=str, default='root',
+                    help="access_key_id.  Default root")
+    ap.add_argument("-sac", "--secret_access_key", required=False, type=str, default='root12345',
+                    help="secret_access_key.  Default root12345")
+    ap.add_argument("-eu", "--endpoint_url", required=False, type=str, default='http://localhost:9000',
+                    help="endpoint_url.  Default http://localhost:9000")
     ap.add_argument("-s", "--sep", required=False, type=str, default=',',
                     help="Delimiter. Default: ,")
     ap.add_argument("-ls", "--log_sep", required=False, type=str, default=',',
                     help="In log file how the fields should separated. Default ,")
     ap.add_argument("-i", "--input", required=False, type=str, default='input/iris.csv',
                     help="Input data path. Default: ./input/iris.csv")
-    ap.add_argument("-o", "--output", required=False, type=str, default='output',
-                    help="Output folder. It must be exists.  Default ./output")
-    ap.add_argument("-b", "--batch_interval", required=False, type=float, default=0.5,
+    ap.add_argument("-b", "--batch_interval", required=False, type=float, default=0.1,
                     help="Time to sleep for every row. Default 0.5 seconds")
-    ap.add_argument("-z", "--batch_size", required=False, type=int, default=10,
+    ap.add_argument("-z", "--batch_size", required=False, type=int, default=50,
                     help="How many rows should be in a single log file. Default 10 rows")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default='csv',
                     help="File extension of source file. If specified other than csv it is considered parquet. Default csv")
-    ap.add_argument("-x", "--prefix", required=False, type=str, default='my_log_',
-                    help="The prefix of log filename. Default my_log_")
     ap.add_argument("-oh", "--output_header", required=False, type=str2bool, default=False,
                     help="Should log files have header?. Default False")
     ap.add_argument("-ofp", "--is_output_format_parquet", required=False, type=str2bool, default=False,
@@ -178,11 +219,14 @@ if __name__ == "__main__":
     args = vars(ap.parse_args())
 
     df_log_generator = DataFrameDataGenerator(
+        bucket=args['bucket'],
+        key=args['key'],
+        access_key_id=args['access_key_id'],
+        secret_access_key=args['secret_access_key'],
+        endpoint_url=args['endpoint_url'],
         input=args['input'],
-        output_folder=args['output'],
         batch_interval=args['batch_interval'],
         batch_size=args['batch_size'],
-        prefix=args['prefix'],
         sep=args['sep'],
         log_sep=args['log_sep'],
         source_file_extension=args['source_file_extension'],
@@ -193,4 +237,4 @@ if __name__ == "__main__":
         shuffle=args['shuffle'],
         excluded_cols=args['excluded_cols']
     )
-    df_log_generator.df_to_file_as_log()
+    df_log_generator.df_to_s3_as_log()
