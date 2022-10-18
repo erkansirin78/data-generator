@@ -4,4 +4,4 @@ pyarrow==1.0.1
 dask==2022.9.2
 sqlalchemy==1.4.41
 psycopg2-binary==2.9.3
-boto3
+boto3==1.24.92

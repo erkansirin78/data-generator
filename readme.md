@@ -1,11 +1,11 @@
 ﻿# Intro
 It is easy to find data sources for batch processing, but it is hard to tell same for realtime processing.
-This repo aims to make easy realtime data processing developments by streaming static datasets to file, postgresql, and Apache Kafka.
-There are 3 python scripts:
+This repo aims to make easy realtime data processing developments by streaming static datasets to file, postgresql, Apache Kafka, AWS S3/MinIO.
+There are 4 python scripts:
 - Stream data to file (`dataframe_to_log.py`) as log files
 - PostgreSQL (`dataframe_to_postgresql.py`)
 - Kafka (`dataframe_to_kafka.py`)
-
+- AWS S3 (`dataframe_to_s3.py`)
 You must use ** Python3 **.
 
 # Installation
