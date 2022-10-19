@@ -184,7 +184,7 @@ if __name__ == "__main__":
                     help="Bucket. It must be exists.  Default dataops")
     ap.add_argument("-k", "--key", required=False, type=str, default='my_data/my_log_',
                     help="""Key. The path and the file name of object in the bucket. 
-                    Timestamp and file extension will add as suffix.  Default my_data/my_log.csv""")
+                    Timestamp and file extension will add as suffix.  Default my_data/my_log_""")
     ap.add_argument("-aki", "--access_key_id", required=False, type=str, default='root',
                     help="access_key_id.  Default root")
     ap.add_argument("-sac", "--secret_access_key", required=False, type=str, default='root12345',
@@ -198,9 +198,9 @@ if __name__ == "__main__":
     ap.add_argument("-i", "--input", required=False, type=str, default='input/iris.csv',
                     help="Input data path. Default: ./input/iris.csv")
     ap.add_argument("-b", "--batch_interval", required=False, type=float, default=0.1,
-                    help="Time to sleep for every row. Default 0.5 seconds")
+                    help="Time to sleep for every row. Default 0.1 seconds")
     ap.add_argument("-z", "--batch_size", required=False, type=int, default=50,
-                    help="How many rows should be in a single log file. Default 10 rows")
+                    help="How many rows should be in a single log file. Default 50 rows")
     ap.add_argument("-e", "--source_file_extension", required=False, type=str, default='csv',
                     help="File extension of source file. If specified other than csv it is considered parquet. Default csv")
     ap.add_argument("-oh", "--output_header", required=False, type=str2bool, default=False,
@@ -213,8 +213,8 @@ if __name__ == "__main__":
                     help="Round number that how many times dataset generated. Default 1")
     ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
                     help="Should dataset shuffled before to generate log?. Default False, no shuffle")
-    ap.add_argument("-exc", "--excluded_cols", required=False, nargs='+', default=['it_is_impossible_column'],
-                    help="The columns not to write log file?. Default ['it_is_impossible_column']. Ex: -exc 'Species' 'PetalWidthCm'")
+    ap.add_argument("-exc", "--excluded_cols", required=False, nargs='+', default='it_is_impossible_column',
+                    help="The columns not to write log file?. Default 'it_is_impossible_column'. E.g.: -exc 'Species' 'PetalWidthCm'")
 
     args = vars(ap.parse_args())
 
