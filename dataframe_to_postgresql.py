@@ -3,12 +3,14 @@ import logging
 import time
 
 import pandas as pd
+import sqlalchemy
+from sqlalchemy import create_engine
 
 
 class DataFrameToPostgresql:
 
     def __init__(self, input, host, port, user, password, database, table, sep, row_sleep_time,
-                 source_file_extension, row_size, batch_size, repeat, shuffle):
+                 source_file_extension, row_size, batch_size, repeat, shuffle, primary_key):
         self.input = input
         print("input: {}".format(self.input))
         self.host = host
@@ -36,6 +38,8 @@ class DataFrameToPostgresql:
         print("row_size {}".format(self.row_size))
         self.batch_size = batch_size
         print("batch_size {}".format(self.batch_size))
+        self.primary_key = primary_key
+        print("primary_key {}".format(self.primary_key))
         self.conn = None
         try:
             logging.info('Connecting to the PostgreSQL')
@@ -89,6 +93,9 @@ class DataFrameToPostgresql:
                 remaining_time_mins = remaining_time_secs / 60
                 print("%d/%d processed, %s %.2f will be completed in %.2f mins." % (
                     counter, df_size, "%", remaining_per, remaining_time_mins))
+        if self.primary_key:
+            engine = create_engine(self.conn)
+            engine.execute('ALTER TABLE {} ADD COLUMN id SERIAL PRIMARY KEY;'.format(self.table))
 
 
 if __name__ == "__main__":
@@ -132,10 +139,11 @@ if __name__ == "__main__":
     ap.add_argument("-shf", "--shuffle", required=False, type=str2bool, default=False,
                     help="Shuffle the rows?. Default: False")
     ap.add_argument("-rs", "--row_size", required=False, type=int, default=0,
-                    help="row size. Default: ""all_table")
+                    help="Default: all_table")
     ap.add_argument("-b", "--batch_size", required=False, type=int, default=10,
-                    help="batch size. Default: ""all_table")
-
+                    help="Default: all_table")
+    ap.add_argument("-pk", "--primary_key", required=False, type=str2bool, default="no",
+                    help="Default: no")
     args = vars(ap.parse_args())
 
     df_to_postgresql = DataFrameToPostgresql(
@@ -152,6 +160,7 @@ if __name__ == "__main__":
         password=args['password'],
         table=args['table'],
         row_size=args['row_size'],
-        batch_size=args['batch_size']
+        batch_size=args['batch_size'],
+        primary_key=args['primary_key']
     )
     df_to_postgresql.df_to_postgresql()
