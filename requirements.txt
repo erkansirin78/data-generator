@@ -1,6 +1,5 @@
 kafka-python==2.0.2
-pandas~=1.4.3
+pandas==1.5.1
 pyarrow==1.0.0
-dask==2022.9.2
 sqlalchemy==1.4.41
 psycopg2==2.9.3

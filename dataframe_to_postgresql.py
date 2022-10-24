@@ -2,7 +2,7 @@ import argparse
 import logging
 import time
 
-import dask.dataframe as dd
+import pandas as pd
 
 
 class DataFrameToPostgresql:
@@ -56,18 +56,18 @@ class DataFrameToPostgresql:
     def read_source_file(self, extension='csv'):
         if extension == 'csv':
             if self.shuffle is True:
-                df = dd.read_csv(self.input, sep=self.sep).sample(frac=1)
+                df = pd.read_csv(self.input, sep=self.sep).sample(frac=1)
             else:
-                df = dd.read_csv(self.input, sep=self.sep)
+                df = pd.read_csv(self.input, sep=self.sep)
             df = df.dropna()
             # put all cols into value column
             return df
         # if not csv, parquet
         else:
             if self.shuffle is True:
-                df = dd.read_parquet(self.input, 'auto').sample(frac=1)
+                df = pd.read_parquet(self.input, 'auto').sample(frac=1)
             else:
-                df = dd.read_parquet(self.input, 'auto')
+                df = pd.read_parquet(self.input, 'auto')
             df = df.dropna()
             # put all cols into value column
             return df
@@ -80,7 +80,7 @@ class DataFrameToPostgresql:
         for i in range(0, self.repeat):
             for r in range(0, len(self.df), self.batch_size):
                 print(str(r) + "-" + str(r + self.batch_size))
-                self.df.loc[r:r + self.batch_size - 1].to_sql(name=self.table, uri=self.conn, if_exists='append',
+                self.df.loc[r:r + self.batch_size - 1].to_sql(name=self.table, con=self.conn, if_exists='append',
                                                               index=False)
                 time.sleep(self.row_sleep_time)
                 counter = counter + 1
