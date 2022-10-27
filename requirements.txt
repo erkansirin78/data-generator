@@ -1,5 +1,6 @@
 kafka-python==2.0.2
-pandas==1.5.1
-pyarrow==1.0.0
+pandas~=1.4.3
+pyarrow==1.0.1
 sqlalchemy==1.4.41
-psycopg2==2.9.3
+psycopg2-binary==2.9.3
+boto3==1.24.92
