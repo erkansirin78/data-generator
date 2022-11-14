@@ -13,6 +13,8 @@ You must use ** Python3 **.
 ```
 erkan@ubuntu:~$ git clone https://github.com/erkansirin78/data-generator.git
 
+erkan@ubuntu:~$ python3 -m pip install virtualenv
+
 erkan@ubuntu:~$ cd data-generator/
 
 erkan@ubuntu:~/data-generator$ python3 -m virtualenv datagen
