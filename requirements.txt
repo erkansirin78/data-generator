@@ -3,4 +3,4 @@ pandas<=1.4.3
 pyarrow==1.0.1
 sqlalchemy==1.4.41
 psycopg2-binary==2.9.3
-boto3==1.24.92
+boto3<=1.24.92
