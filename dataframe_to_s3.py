@@ -86,7 +86,7 @@ class DataFrameDataGenerator:
                                 config=Config(signature_version='s3v4'))
         return s3_res
 
-    def save_df_to_s3(self, df, bucket, key, is_output_format_parquet=False, index=False):
+    def save_df_to_s3(self, df, bucket, key, is_output_format_parquet=False, index=False, header=False):
         ''' Store df as a buffer, then save buffer to s3'''
         s3_res = self.get_s3_resource()
         try:
@@ -97,7 +97,7 @@ class DataFrameDataGenerator:
                 logging.info(f'{key} saved to s3 bucket {bucket}')
             else:
                 buffer = io.StringIO()
-                df.to_csv(buffer, index=False)
+                df.to_csv(buffer, index=False, header=self.output_header)
                 s3_res.Object(bucket, key).put(Body=buffer.getvalue())
                 logging.info(f'{key} saved to s3 bucket {bucket}')
         except Exception as e:
