@@ -78,27 +78,27 @@ class DataFrameDataGenerator:
                 df = df[columns_to_write]
             return df
 
-    def get_s3_resource(self):
-        s3_res = boto3.resource('s3',
+    def get_s3_client(self):
+        s3_client = boto3.client('s3',
                                 endpoint_url=self.endpoint_url,
                                 aws_access_key_id=self.access_key_id,
                                 aws_secret_access_key=self.secret_access_key,
                                 config=Config(signature_version='s3v4'))
-        return s3_res
+        return s3_client
 
     def save_df_to_s3(self, df, bucket, key, is_output_format_parquet=False, index=False, header=False):
         ''' Store df as a buffer, then save buffer to s3'''
-        s3_res = self.get_s3_resource()
+        s3_client = self.get_s3_client()
         try:
             if is_output_format_parquet:
                 buffer = io.BytesIO()
                 df.to_parquet(buffer, engine='pyarrow', index=self.output_index)
-                s3_res.Object(bucket, key).put(Body=buffer.getvalue())
+                s3_client.put_object(Body=buffer.getvalue(), Bucket=bucket, Key=key)
                 logging.info(f'{key} saved to s3 bucket {bucket}')
             else:
                 buffer = io.StringIO()
                 df.to_csv(buffer, index=False, header=self.output_header)
-                s3_res.Object(bucket, key).put(Body=buffer.getvalue())
+                s3_client.put_object(Body=buffer.getvalue(), Bucket=bucket, Key=key)
                 logging.info(f'{key} saved to s3 bucket {bucket}')
         except Exception as e:
             raise logging.exception(e)
@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-buc", "--bucket", required=False, type=str, default='dataops',
-                    help="Bucket. It must be exists.  Default dataops")
+                    help="Bucket. For S3 works as prefix. E.g. my-bucket-name/.  Default dataops")
     ap.add_argument("-k", "--key", required=False, type=str, default='my_data/my_log_',
                     help="""Key. The path and the file name of object in the bucket. 
                     Timestamp and file extension will add as suffix.  Default my_data/my_log_""")
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     ap.add_argument("-sac", "--secret_access_key", required=False, type=str, default='root12345',
                     help="secret_access_key.  Default root12345")
     ap.add_argument("-eu", "--endpoint_url", required=False, type=str, default='http://localhost:9000',
-                    help="endpoint_url.  Default http://localhost:9000")
+                    help="For s3 https://<bucket-name>.s3.<region>.amazonaws.com.  Default for MinIO http://localhost:9000")
     ap.add_argument("-s", "--sep", required=False, type=str, default=',',
                     help="Delimiter. Default: ,")
     ap.add_argument("-ls", "--log_sep", required=False, type=str, default=',',
