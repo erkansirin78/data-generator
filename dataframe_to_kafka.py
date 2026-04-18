@@ -92,11 +92,11 @@ class DataFrameToKafka:
             for index, row in self.df.iterrows():
 
                 if self.key_index == 1000:
-                    self.producer.send(self.topic, key=str(index).encode(), value=row[-1].encode())
-                    # row[-1] corresponds to all columns which already put in one column named value
+                    self.producer.send(self.topic, key=str(index).encode(), value=row.iloc[-1].encode())
+                    # row.iloc[-1] corresponds to all columns which already put in one column named value
                     # If  -k or --key_index not used pandas df index will be sent to kafka as key
                 else:
-                    self.producer.send(self.topic, key=str(row[self.key_index]).encode(), value=row[-1].encode())
+                    self.producer.send(self.topic, key=str(row.iloc[self.key_index]).encode(), value=row.iloc[-1].encode())
                     # if -k or --key_index used the column spesified in this option will be sent to kafka as key
                 self.producer.flush()
                 time.sleep(self.row_sleep_time)
@@ -104,7 +104,7 @@ class DataFrameToKafka:
                 remaining_per = 100 - (100 * (sayac / df_size))
                 remaining_time_secs = (total_time - (self.row_sleep_time * sayac))
                 remaining_time_mins = remaining_time_secs / 60
-                print(str(index) + " - " + str(row[-1]))
+                print(str(index) + " - " + str(row.iloc[-1]))
                 print("%d/%d processed, %s %.2f will be completed in %.2f mins." % (
                     sayac, df_size, "%", remaining_per, remaining_time_mins))
 
