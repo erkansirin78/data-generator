@@ -16,7 +16,8 @@ from botocore.config import Config
 
 class DataFrameDataGenerator:
     def __init__(self, input, bucket, key, access_key_id, secret_access_key, endpoint_url, batch_interval, repeat, shuffle, batch_size,
-                 sep, log_sep, source_file_extension, output_header, is_output_format_parquet, output_index, excluded_cols):
+                 sep, log_sep, source_file_extension, output_header, is_output_format_parquet, output_index, excluded_cols,
+                 order_by=None, ascending=True):
         self.sep = sep
         print("self.sep", self.sep)
         self.log_sep = log_sep
@@ -27,6 +28,10 @@ class DataFrameDataGenerator:
         print("self.excluded_cols", self.excluded_cols)
         self.shuffle = shuffle
         print("self.shuffle", self.shuffle)
+        self.order_by = order_by
+        print("self.order_by", self.order_by)
+        self.ascending = ascending
+        print("self.ascending", self.ascending)
         self.df = self.read_source_file(source_file_extension)
         print("self.df", len(self.df))
         self.bucket = bucket
@@ -53,30 +58,22 @@ class DataFrameDataGenerator:
 
     def read_source_file(self, extension='csv'):
         if extension == 'csv':
-            if self.shuffle is True:
-                df = pd.read_csv(self.input, sep=self.sep).sample(frac=1)
-                columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
-                print("columns_to_write", columns_to_write)
-                df = df[columns_to_write]
-            else:
-                df = pd.read_csv(self.input, sep=self.sep)
-                columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
-                print("columns_to_write", columns_to_write)
-                df = df[columns_to_write]
-            return df
+            df = pd.read_csv(self.input, sep=self.sep)
         # if not csv, parquet
         else:
-            if self.shuffle is True:
-                df = pd.read_parquet(self.input, 'auto').sample(frac=1)
-                columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
-                print("columns_to_write", columns_to_write)
-                df = df[columns_to_write]
-            else:
-                df = pd.read_parquet(self.input, 'auto')
-                columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
-                print("columns_to_write", columns_to_write)
-                df = df[columns_to_write]
-            return df
+            df = pd.read_parquet(self.input, 'auto')
+
+        # order_by takes precedence over shuffle (shuffling then sorting is pointless)
+        if self.order_by:
+            print("ordering by", self.order_by, "ascending", self.ascending)
+            df = df.sort_values(by=self.order_by, ascending=self.ascending)
+        elif self.shuffle is True:
+            df = df.sample(frac=1)
+
+        columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
+        print("columns_to_write", columns_to_write)
+        df = df[columns_to_write]
+        return df
 
     def get_s3_client(self):
         s3_client = boto3.client('s3',
@@ -221,6 +218,11 @@ if __name__ == "__main__":
                     help="Should dataset shuffled before to generate log?. Default False, no shuffle")
     ap.add_argument("-exc", "--excluded_cols", required=False, nargs='+', default='it_is_impossible_column',
                     help="The columns not to write log file?. Default 'it_is_impossible_column'. E.g.: -exc 'Species' 'PetalWidthCm'")
+    ap.add_argument("-ob", "--order_by", required=False, nargs='+', default=None,
+                    help="Sort dataset by one or more columns before generating log (e.g. a time column). "
+                         "Takes precedence over --shuffle. Default None, keep source order. E.g.: -ob event_time")
+    ap.add_argument("-asc", "--ascending", required=False, type=str2bool, default=True,
+                    help="Sort order for --order_by. Default True (ascending)")
 
     args = vars(ap.parse_args())
 
@@ -241,6 +243,8 @@ if __name__ == "__main__":
         output_index=args['output_index'],
         repeat=args['repeat'],
         shuffle=args['shuffle'],
-        excluded_cols=args['excluded_cols']
+        excluded_cols=args['excluded_cols'],
+        order_by=args['order_by'],
+        ascending=args['ascending']
     )
     df_log_generator.df_to_s3_as_log()
