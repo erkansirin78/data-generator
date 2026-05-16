@@ -83,12 +83,17 @@ class DataFrameDataGenerator:
                                 endpoint_url=self.endpoint_url,
                                 aws_access_key_id=self.access_key_id,
                                 aws_secret_access_key=self.secret_access_key,
-                                config=Config(signature_version='s3v4'))
+                                config=Config(signature_version='s3v4',
+                                              request_checksum_calculation='when_required',
+                                              response_checksum_validation='when_required'))
         return s3_client
 
     def save_df_to_s3(self, df, bucket, key, is_output_format_parquet=False, index=False, header=False):
         ''' Store df as a buffer, then save buffer to s3'''
         s3_client = self.get_s3_client()
+        # S3 object keys must not start with '/'. Some S3-compatible servers
+        # (e.g. RustFS) reject a leading slash with InvalidArgument.
+        key = key.lstrip('/')
         try:
             if is_output_format_parquet:
                 buffer = io.BytesIO()
@@ -101,7 +106,8 @@ class DataFrameDataGenerator:
                 s3_client.put_object(Body=buffer.getvalue(), Bucket=bucket, Key=key)
                 logging.info(f'{key} saved to s3 bucket {bucket}')
         except Exception as e:
-            raise logging.exception(e)
+            logging.exception(e)
+            raise
 
     # write df to disk
     def df_to_s3_as_log(self):
