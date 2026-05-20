@@ -8,7 +8,7 @@ import argparse
 python dataframe_to_log.py --sep "," \
 --input "input/iris.csv" --output "output" \
 --batch_interval 0.1 --batch_size 10 --source_file_extension "csv" \
---prefix "iris_" --output_header False --output_index True \
+--prefix "iris_" --output_header True --output_index True \
 --log_sep '|' --excluded_cols 'Species' 'PetalWidthCm'
 """
 
@@ -59,6 +59,20 @@ class DataFrameDataGenerator:
                 columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
                 print("columns_to_write", columns_to_write)
                 df = df[columns_to_write]
+
+            # Tüm sütun isimlerini küçük harfe dönüştürmek
+            df.columns = df.columns.str.lower()
+
+            # datetime sütunu zaten varsa
+            if 'datetime' in df.columns:
+                df['datetime'] = pd.to_datetime(df['datetime'])
+            else:
+                # date ve time sütunları varsa birleştir yeni datetime sütunu oluştur
+                if 'date' in df.columns and 'time' in df.columns:
+                    df['datetime'] = pd.to_datetime(df['date'] + ' ' + df['time'])
+                    # df.drop(['date', 'time'], axis=1, inplace=True)
+            
+
             return df
         # if not csv, parquet
         else:
@@ -72,15 +86,56 @@ class DataFrameDataGenerator:
                 columns_to_write = [x for x in df.columns if x not in self.excluded_cols]
                 print("columns_to_write", columns_to_write)
                 df = df[columns_to_write]
+
+            df.columns = df.columns.str.lower()
+
+            if 'datetime' in df.columns:
+                df['datetime'] = pd.to_datetime(df['datetime'])
+            else:
+                if 'date' in df.columns and 'time' in df.columns:
+                    df['datetime'] = pd.to_datetime(df['date'] + ' ' + df['time'])
+                    # df.drop(['date', 'time'], axis=1, inplace=True)
+            
             return df
 
     # write df to disk
     def df_to_file_as_log(self):
+
         # get dataframe size
         df_size = len(self.df)
 
         # calculate total streaming time
         total_time = self.batch_interval * df_size * self.repeat
+    
+
+        
+        self.df.sort_values(by='datetime', inplace=True)
+        
+        print(self.df.head())
+
+
+        self.df['sleep_duration'] = 0  # Sıfır ile başlat
+
+        prev_datetime = None  # Önceki datetime ı tutmak için
+        for index, row in self.df.iterrows():
+            current_datetime = row['datetime']
+            if prev_datetime is not None:
+                print(prev_datetime)
+                print(current_datetime)
+            # Şu anki datetime ile önceki datetime arasındaki zaman farkını saniye 
+                time_difference = (current_datetime - prev_datetime).total_seconds()
+                print(time_difference)
+            # Bu zaman farkı kadar bekliyoruz
+                time.sleep(time_difference)
+            # Verideki sleep_duration sütununu güncelleyip beklenen süreyi kayıt
+                self.df.at[index, 'sleep_duration'] = time_difference
+        # Önceki datetime i güncelle bir sonraki için
+            prev_datetime = current_datetime
+
+
+        # Bekleme sürelerini saklamak için sleep_duration sütununu ekleme
+        
+        
 
         time_list_for_each_batch = []
         repeat_counter = 1
@@ -162,8 +217,8 @@ if __name__ == "__main__":
                     help="File extension of source file. If specified other than csv it is considered parquet. Default csv")
     ap.add_argument("-x", "--prefix", required=False, type=str, default='my_log_',
                     help="The prefix of log filename. Default my_log_")
-    ap.add_argument("-oh", "--output_header", required=False, type=str2bool, default=False,
-                    help="Should log files have header?. Default False")
+    ap.add_argument("-oh", "--output_header", required=False, type=str2bool, default=True,
+                    help="Should log files have header?. Default True")
     ap.add_argument("-ofp", "--is_output_format_parquet", required=False, type=str2bool, default=False,
                     help="Is output format be parquet? If True will write parquet format. Default False")
     ap.add_argument("-idx", "--output_index", required=False, type=str2bool, default=False,
@@ -194,3 +249,5 @@ if __name__ == "__main__":
         excluded_cols=args['excluded_cols']
     )
     df_log_generator.df_to_file_as_log()
+
+
