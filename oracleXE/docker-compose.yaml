@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  oracle-xe:
+    container_name: oracle-xe
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    environment:
+      - ORACLE_PWD=YourPassword123
+      - ORACLE_CHARACTERSET=AL32UTF8
+    volumes:
+      - oradata:/opt/oracle/oradata
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+
+volumes:
+  oradata:
